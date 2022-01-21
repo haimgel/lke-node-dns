@@ -1,4 +1,4 @@
-# Node-DNS: generate forward and reverse records for K8S nodes on Linode Kubernetes
+# Node-DNS: Kubernetes controller to generate forward and reverse DNS records for all nodes on Linode Kubernetes
 
 This controller uses Linode API to automatically create or update DNS records for Kubernetes nodes in your Linode cluster.
 
@@ -101,3 +101,10 @@ spec:
 ```
 
 Once deployed, watch the logs to verify that the controller is working as expected.
+
+## Cleanup
+
+This controller adds a finalizer to each node to delete the DNS records when the node is deleted. If you stopped using
+this controller, please remove the finalizer `k8s.haim.dev/linode-dns-finalizer` manually from each node, otherwise
+the nodes won't be cleaned up properly. They'll be stuck in `NotReady,SchedulingDisabled` state till the finalizer is 
+removed.

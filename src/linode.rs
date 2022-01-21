@@ -152,6 +152,15 @@ impl Client {
         Ok(response.data)
     }
 
+    async fn delete(&self, endpoint: &str) -> Result<()> {
+        self
+            .request(reqwest::Method::DELETE, endpoint)
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(())
+    }
+
     pub async fn request_with_body<T: DeserializeOwned, B: Serialize + ?Sized>(
         &self,
         method: reqwest::Method,
@@ -192,6 +201,14 @@ impl Client {
     ) -> Result<DomainRecordResponse> {
         self.post(&format!("domains/{}/records", domain_id), &domain_record)
             .await
+    }
+
+    pub async fn delete_domain_record(
+        &self,
+        domain_id: u64,
+        domain_record_id: u64,
+    ) -> Result<()> {
+        self.delete(&format!("domains/{}/records/{}", domain_id, domain_record_id)).await
     }
 
     pub async fn update_domain_record(
