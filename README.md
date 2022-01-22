@@ -1,8 +1,8 @@
-# Node-DNS: Kubernetes controller to generate forward and reverse DNS records for all nodes on Linode Kubernetes
+# Kubernetes controller to generate forward and reverse DNS records for all nodes on Linode Kubernetes
 
 This controller uses Linode API to automatically create or update DNS records for Kubernetes nodes in your Linode cluster.
 
-By default, Linode creates RDNS records under `ip.linodeusercontent.com` domain, which is not the best approach:
+By default, Linode creates reverse DNS records under `ip.linodeusercontent.com` domain, which is not the best approach in many cases:
 1. Hard to identify your own nodes vs. some other hosts, when troubleshooting any _outgoing_ connections from these nodes.
 2. Outgoing SMTP is problematic in particular: it's best to use own domain to shield from potential issues with `linodeusercontent.com` reputation,
    defining SPF records is also much easier when the nodes belong to your own domain.
@@ -85,7 +85,7 @@ spec:
     spec:
       containers:
         - name: node-dns-controller
-          image: ghcr.io/haimgel/node-dns:0.1.0
+          image: ghcr.io/haimgel/lke-node-dns:0.1.0
           imagePullPolicy: Always
           command: ["/app/node-dns"]
           env:
