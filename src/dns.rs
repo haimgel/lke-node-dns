@@ -101,10 +101,12 @@ async fn delete_a_record(linode_api_token: &str, domain: &str, host_name: &str) 
         .context(format!("Could not find domain {} at Linode", domain))?;
 
     // : Vec<Box<dyn Future<Output=Result<()>>>>
-    let record_ids: Vec<u64> = client.get_domain_records(domain.id).await?
+    let record_ids: Vec<u64> = client
+        .get_domain_records(domain.id)
+        .await?
         .into_iter()
         .filter(|r| r.name == host_name)
-        .map(|record| record.id )
+        .map(|record| record.id)
         .collect();
 
     for id in record_ids.into_iter() {

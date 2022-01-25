@@ -153,8 +153,7 @@ impl Client {
     }
 
     async fn delete(&self, endpoint: &str) -> Result<()> {
-        self
-            .request(reqwest::Method::DELETE, endpoint)
+        self.request(reqwest::Method::DELETE, endpoint)
             .send()
             .await?
             .error_for_status()?;
@@ -203,12 +202,9 @@ impl Client {
             .await
     }
 
-    pub async fn delete_domain_record(
-        &self,
-        domain_id: u64,
-        domain_record_id: u64,
-    ) -> Result<()> {
-        self.delete(&format!("domains/{}/records/{}", domain_id, domain_record_id)).await
+    pub async fn delete_domain_record(&self, domain_id: u64, domain_record_id: u64) -> Result<()> {
+        self.delete(&format!("domains/{}/records/{}", domain_id, domain_record_id))
+            .await
     }
 
     pub async fn update_domain_record(

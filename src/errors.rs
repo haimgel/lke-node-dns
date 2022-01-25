@@ -1,5 +1,5 @@
-use thiserror::Error;
 use kube::runtime::finalizer::Error as FinalizerError;
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
