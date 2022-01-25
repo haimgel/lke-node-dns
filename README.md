@@ -18,7 +18,10 @@ By default, Linode creates reverse DNS records under `ip.linodeusercontent.com` 
         k8s NS ns4.linode.com.
         k8s NS ns5.linode.com.
     ```
-3. Create a service account, a cluster role to read and watch nodes, and bind it to the service account:
+
+3. Create a service account, a cluster role to read, watch and patch nodes, and bind it to the service account. Patch
+   permission is needed to add the finalizer to remove the DNS record when the node is deleted.
+
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -40,6 +43,7 @@ rules:
         - get
         - list
         - watch
+        - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

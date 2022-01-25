@@ -790,6 +790,7 @@ dependencies = [
  "futures",
  "k8s-openapi",
  "kube",
+ "lazy_static",
  "reqwest",
  "serde",
  "serde_json",
