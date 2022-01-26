@@ -90,6 +90,7 @@ async fn cleanup(node: Node, ctx: ControllerContext<ContextData>) -> Result<Reco
         ctx.get_ref().linode_api_token.as_str(),
         ctx.get_ref().node_domain.as_str(),
         node_addresses.host_name.as_str(),
+        node_addresses.ip_address,
     )
     .await?;
     CACHE.lock().unwrap().remove(node_addresses.host_name.as_str());

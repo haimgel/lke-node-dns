@@ -106,6 +106,12 @@ spec:
 
 Once deployed, watch the logs to verify that the controller is working as expected.
 
+## SPF records glue
+
+This controller also creates `A` records for each IP address in the target domain, in the form of:
+`A.B.C.D._spf.example.com`. The purpose of this is to mark all these Kubernetes nodes as legitimate mail sending
+hosts in SPF records: all you need to do is to add `exists:%{i}._spf.example.com` to your SPF records.
+
 ## Cleanup
 
 This controller adds a finalizer to each node to delete the DNS records when the node is deleted. If you stopped using

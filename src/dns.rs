@@ -48,6 +48,7 @@ async fn resolver() -> Result<TokioAsyncResolver> {
     Ok(resolver)
 }
 
+#[instrument(skip(linode_api_token))]
 async fn add_a_record(linode_api_token: &str, domain: &str, host_name: &str, ip_address: IpAddr) -> Result<()> {
     let client = linode::Client::new(linode_api_token);
     let domains = client.get_domains().await?;
@@ -92,6 +93,7 @@ async fn add_a_record(linode_api_token: &str, domain: &str, host_name: &str, ip_
     Ok(())
 }
 
+#[instrument(skip(linode_api_token))]
 async fn delete_a_record(linode_api_token: &str, domain: &str, host_name: &str) -> Result<()> {
     let client = linode::Client::new(linode_api_token);
     let domains = client.get_domains().await?;
@@ -116,6 +118,7 @@ async fn delete_a_record(linode_api_token: &str, domain: &str, host_name: &str) 
     Ok(())
 }
 
+#[instrument(skip(linode_api_token))]
 async fn trigger_rptr_update(linode_api_token: &str, fqdn: &str, ip_address: IpAddr) -> Result<()> {
     let client = linode::Client::new(linode_api_token);
 
@@ -158,11 +161,16 @@ async fn reverse_lookup_check(resolver: &TokioAsyncResolver, ip: IpAddr, fqdn: &
     }
 }
 
+fn spf_glue_record(ip_address: IpAddr) -> String {
+    format!("{}._spf", ip_address.to_string())
+}
+
 #[instrument(skip(linode_api_token))]
 pub async fn update(linode_api_token: &str, domain: &str, host_name: &str, ip_address: IpAddr) -> Result<()> {
     debug!("Verifying forward and reverse DNS records");
     let resolver = resolver().await?;
     let fqdn = format!("{}.{}", host_name, domain);
+    let spf_fqdn = format!("{}.{}", spf_glue_record(ip_address), domain);
 
     if forward_lookup_check(&resolver, &fqdn, ip_address).await.is_err() {
         info!("Forward lookup failed, adding new DNS record");
@@ -170,6 +178,12 @@ pub async fn update(linode_api_token: &str, domain: &str, host_name: &str, ip_ad
         debug!(delay = DNS_PROPAGATION_DELAY, "Waiting for DNS propagation");
         tokio::time::sleep(std::time::Duration::from_secs(DNS_PROPAGATION_DELAY)).await;
     }
+
+    if forward_lookup_check(&resolver, &spf_fqdn, ip_address).await.is_err() {
+        info!("Forward lookup failed for the SPF record, adding new DNS record");
+        add_a_record(linode_api_token, &domain, spf_glue_record(ip_address).as_str(), ip_address).await?;
+    }
+
     if reverse_lookup_check(&resolver, ip_address, &fqdn).await.is_err() {
         info!("Reverse lookup failed, triggering API to update");
         trigger_rptr_update(linode_api_token, &fqdn, ip_address).await?;
@@ -180,7 +194,9 @@ pub async fn update(linode_api_token: &str, domain: &str, host_name: &str, ip_ad
 }
 
 #[instrument(skip(linode_api_token))]
-pub async fn delete(linode_api_token: &str, domain: &str, host_name: &str) -> Result<()> {
+pub async fn delete(linode_api_token: &str, domain: &str, host_name: &str, ip_address: IpAddr) -> Result<()> {
     info!("Deleting DNS record");
-    delete_a_record(linode_api_token, domain, host_name).await
+    delete_a_record(linode_api_token, &domain, host_name).await?;
+    delete_a_record(linode_api_token, &domain, spf_glue_record(ip_address).as_str()).await?;
+    Ok(())
 }
